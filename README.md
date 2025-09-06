@@ -1,6 +1,6 @@
 # 🦀 Rustium CLI
 
-[![CI](https://github.com/const-nishant/rustium_cli.git/workflows/CI/badge.svg)](https://github.com/const-nishant/rustium_cli.git/actions)
+[![CI](https://github.com/const-nishant/rustium_cli/workflows/CI/badge.svg)](https://github.com/const-nishant/rustium_cli/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > 📝 **Markdown to Medium Converter** - Transform your Markdown files into Medium-friendly format with beautiful terminal interface
@@ -23,7 +23,7 @@ Rustium CLI is a powerful, interactive command-line tool built in Rust that conv
 
 ```bash
 # Clone the repository
-git clone https://github.com/const-nishant/rustium_cli.git.git
+git clone https://github.com/const-nishant/rustium_cli.git
 cd rustium_cli
 
 # Build and install
@@ -40,7 +40,7 @@ cargo install --git https://github.com/const-nishant/rustium_cli.git
 
 ### Pre-built Binaries
 
-Download the latest release for your platform from the [Releases](https://github.com/const-nishant/rustium_cli.git/releases) page:
+Download the latest release for your platform from the [Releases](https://github.com/const-nishant/rustium_cli/releases) page:
 
 - **Windows**: `rustium_cli-x86_64-pc-windows-msvc.zip`
 - **macOS**: `rustium_cli-x86_64-apple-darwin.tar.gz`
@@ -111,7 +111,7 @@ Rustium CLI transforms your Markdown content by:
 
 ```bash
 # Clone the repository
-git clone https://github.com/const-nishant/rustium_cli.git.git
+git clone https://github.com/const-nishant/rustium_cli.git
 cd rustium_cli
 
 # Build in debug mode
@@ -164,9 +164,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you encounter any issues or have questions:
 
-- 🐛 **Bug Reports**: [Open an issue](https://github.com/const-nishant/rustium_cli.git/issues)
-- 💡 **Feature Requests**: [Open an issue](https://github.com/const-nishant/rustium_cli.git/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/const-nishant/rustium_cli.git/discussions)
+- 🐛 **Bug Reports**: [Open an issue](https://github.com/const-nishant/rustium_cli/issues)
+- 💡 **Feature Requests**: [Open an issue](https://github.com/const-nishant/rustium_cli/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/const-nishant/rustium_cli/discussions)
 
 ---
 
