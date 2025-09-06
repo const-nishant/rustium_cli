@@ -82,7 +82,7 @@ impl MarkdownFormatter {
     pub fn save_formatted_content(content: &str, output_path: &str) -> Result<(), RustiumError> {
         // Remove ANSI color codes for clean file output
         let clean_content = Self::strip_ansi_codes(content);
-        fs::write(output_path, clean_content).map_err(|e| RustiumError::Io(e))?;
+        fs::write(output_path, clean_content).map_err(RustiumError::Io)?;
         Ok(())
     }
 

@@ -81,7 +81,7 @@ pub async fn interactive_mode() -> Result<(), RustiumError> {
             // Read content and format again for saving
             let content = std::fs::read_to_string(&file_path)?;
             let title = extract_title(&content).unwrap_or("Untitled Post");
-            let formatted_content = MarkdownFormatter::format_for_medium(&content, &title, &[]);
+            let formatted_content = MarkdownFormatter::format_for_medium(&content, title, &[]);
 
             MarkdownFormatter::save_formatted_content(&formatted_content, &output_path)?;
 
@@ -236,7 +236,7 @@ async fn process_file(file_path: &str, display_only: bool) -> Result<(), Rustium
     tokio::time::sleep(Duration::from_millis(1500)).await;
 
     // Format content
-    let formatted_content = MarkdownFormatter::format_for_medium(&content, &title, &[]);
+    let formatted_content = MarkdownFormatter::format_for_medium(&content, title, &[]);
 
     pb.finish_with_message("✅ Formatting complete!");
 
