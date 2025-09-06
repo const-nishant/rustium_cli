@@ -128,15 +128,17 @@ jobs:
           $env:STRIP = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\*\bin\Hostx64\x64\strip.exe"
           if (Test-Path $env:STRIP) { & $env:STRIP target\${{ matrix.target }}\release\rustium_cli.exe }
 
-      - name: Create archive
+      - name: Create archive (Windows)
+        if: runner.os == 'Windows'
         run: |
-          if [ "${{ matrix.archive }}" = "zip" ]; then
-            cd target/${{ matrix.target }}/release
-            zip -r ../../../rustium_cli-${{ matrix.target }}.zip rustium_cli${{ matrix.ext }}
-            cd ../../..
-          else
-            tar -czf rustium_cli-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release rustium_cli${{ matrix.ext }}
-          fi
+          cd target/${{ matrix.target }}/release
+          Compress-Archive -Path rustium_cli${{ matrix.ext }} -DestinationPath ../../../rustium_cli-${{ matrix.target }}.zip
+          cd ../../..
+
+      - name: Create archive (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          tar -czf rustium_cli-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release rustium_cli${{ matrix.ext }}
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v1
