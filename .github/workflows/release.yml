@@ -1,0 +1,182 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g., v1.0.0)"
+        required: true
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag or input
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## 🦀 Rustium CLI ${{ steps.get_version.outputs.VERSION }}
+
+            ### 📦 Downloads
+
+            **Windows (x64)**
+            - `rustium_cli-x86_64-pc-windows-msvc.zip` - Windows executable
+            - `rustium_cli-x86_64-pc-windows-gnu.zip` - Windows executable (GNU toolchain)
+
+            **macOS**
+            - `rustium_cli-x86_64-apple-darwin.tar.gz` - Intel Mac
+            - `rustium_cli-aarch64-apple-darwin.tar.gz` - Apple Silicon Mac
+
+            **Linux**
+            - `rustium_cli-x86_64-unknown-linux-gnu.tar.gz` - Linux x64
+            - `rustium_cli-x86_64-unknown-linux-musl.tar.gz` - Linux x64 (musl)
+
+            ### 🚀 Installation
+
+            After downloading, extract the archive and place the executable in your PATH.
+
+            ### 📝 What's New
+
+            See the [changelog](CHANGELOG.md) for detailed changes.
+          draft: false
+          prerelease: false
+
+  build:
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            ext: .exe
+            archive: zip
+          - target: x86_64-pc-windows-gnu
+            os: windows-latest
+            ext: .exe
+            archive: zip
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            ext: ""
+            archive: tar.gz
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            ext: ""
+            archive: tar.gz
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            ext: ""
+            archive: tar.gz
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            ext: ""
+            archive: tar.gz
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install musl-tools (for musl target)
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Strip binary (Unix)
+        if: runner.os != 'Windows'
+        run: strip target/${{ matrix.target }}/release/rustium_cli${{ matrix.ext }}
+
+      - name: Strip binary (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $env:STRIP = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\*\bin\Hostx64\x64\strip.exe"
+          if (Test-Path $env:STRIP) { & $env:STRIP target\${{ matrix.target }}\release\rustium_cli.exe }
+
+      - name: Create archive
+        run: |
+          if [ "${{ matrix.archive }}" = "zip" ]; then
+            cd target/${{ matrix.target }}/release
+            zip -r ../../../rustium_cli-${{ matrix.target }}.zip rustium_cli${{ matrix.ext }}
+            cd ../../..
+          else
+            tar -czf rustium_cli-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release rustium_cli${{ matrix.ext }}
+          fi
+
+      - name: Upload to Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./rustium_cli-${{ matrix.target }}.${{ matrix.archive }}
+          asset_name: rustium_cli-${{ matrix.target }}.${{ matrix.archive }}
+          asset_content_type: application/octet-stream
+
+  # publish-crate:
+  #   needs: [create-release, build]
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+
+  #     - name: Install Rust
+  #       uses: dtolnay/rust-toolchain@stable
+  #       with:
+  #         components: rustfmt, clippy
+
+  #     - name: Cache cargo registry
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: |
+  #           ~/.cargo/registry
+  #           ~/.cargo/git
+  #           target
+  #         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+  #     - name: Run tests
+  #       run: cargo test --verbose
+
+  #     - name: Run clippy
+  #       run: cargo clippy --all-targets --all-features -- -D warnings
+
+  #     - name: Check formatting
+  #       run: cargo fmt --all -- --check
+
+  #     - name: Publish to crates.io
+  #       run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+  #       env:
+  #         CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
